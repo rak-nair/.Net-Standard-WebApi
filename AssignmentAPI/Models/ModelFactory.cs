@@ -36,7 +36,9 @@ namespace AssignmentAPI.Models
                 if (player == null)
                     throw new Exception("No such player exists");
 
-                if (_data.GetPlayersInMatch(matchId).Any(x => x.Player.PlayerID == playerID))
+                var matchPlayers = _data.GetMatchPlayersInMatch(matchId);
+
+                if (matchPlayers.Any(x => x.Player.PlayerID == playerID))
                 {
                     throw new Exception("Player already exists in the match");
                 }

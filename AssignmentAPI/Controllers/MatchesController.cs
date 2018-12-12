@@ -44,7 +44,7 @@ namespace AssignmentAPI.Controllers
             {
                 return BadRequest($"No data - {ex.Message}");
             }
-            
+
         }
 
         [HttpPost]
@@ -61,14 +61,9 @@ namespace AssignmentAPI.Controllers
                         return BadRequest("Match already exists");
                     }
 
-                    if (TheRepository.AddMatch(matchEntity))
-                    {
-                        return CreatedAtRoute("Matches", new { matchid = matchEntity.MatchID }, matchEntity);
-                    }
-                    else
-                    {
-                        return BadRequest("Failed to add a new match.");
-                    }
+                    matchEntity = TheRepository.AddMatch(matchEntity);
+
+                    return CreatedAtRoute("Matches", new { matchid = matchEntity.MatchID }, matchEntity);
                 }
                 catch (Exception ex)
                 {
@@ -85,7 +80,8 @@ namespace AssignmentAPI.Controllers
         {
             try
             {
-                var playersInMatch = TheModelFactory.Create(TheRepository.GetPlayersInMatch(matchid));
+                var playersInMatch = TheModelFactory.Create(TheRepository.GetMatchPlayersInMatch(matchid));
+
                 return Ok(playersInMatch);
             }
             catch (Exception ex)
@@ -101,17 +97,12 @@ namespace AssignmentAPI.Controllers
             try
             {
                 var playerInMatch = TheModelFactory.Parse(matchId, playerID);
+                playerInMatch = TheRepository.AddPlayerToMatch(playerInMatch);
 
-                if (TheRepository.AddPlayerToMatch(playerInMatch))
-                {
-                    return CreatedAtRoute("PlayersInMatch",
-                        new { matchid = matchId, matchPlayerid = playerInMatch.MatchPlayerID },
-                        playerInMatch);
-                }
-                else
-                {
-                    return BadRequest($"Failed to add player with ID- {playerID} to the match");
-                }
+                return CreatedAtRoute("PlayersInMatch",
+                    new { matchid = matchId, matchPlayerid = playerInMatch.MatchPlayerID },
+                    playerInMatch);
+
             }
             catch (Exception ex)
             {

@@ -39,13 +39,13 @@ namespace AssignmentAPI.Services
             SampleMatch = match1;
         }
 
-        public bool AddMatch(MatchEntity match)
+        public MatchEntity AddMatch(MatchEntity match)
         {
             try
             {
                 match.MatchID = _matches.Max(x => x.MatchID) + 1;
                 _matches = _matches.Concat(new[] { match });
-                return true;
+                return match;
             }
             catch (Exception)
             {
@@ -53,13 +53,13 @@ namespace AssignmentAPI.Services
             }
         }
 
-        public bool AddPlayer(PlayerEntity player)
+        public PlayerEntity AddPlayer(PlayerEntity player)
         {
             try
             {
                 player.PlayerID = _players.Max(x => x.PlayerID) + 1;
                 _players = _players.Concat(new[] { player });
-                return true;
+                return player;
             }
             catch (Exception)
             {
@@ -68,13 +68,13 @@ namespace AssignmentAPI.Services
             }
         }
 
-        public bool AddPlayerToMatch(MatchPlayerEntity matchPlayer)
+        public MatchPlayerEntity AddPlayerToMatch(MatchPlayerEntity matchPlayer)
         {
             try
             {
                 matchPlayer.MatchPlayerID = _matchPlayers.Max(x => x.MatchPlayerID) + 1;
                 _matchPlayers = _matchPlayers.Concat(new[] { matchPlayer });
-                return true;
+                return matchPlayer;
             }
             catch (Exception)
             {
@@ -102,7 +102,7 @@ namespace AssignmentAPI.Services
             return _players.Where(x => x.PlayerID == playerId).FirstOrDefault();
         }
 
-        public IEnumerable<MatchPlayerEntity> GetPlayersInMatch(int matchId)
+        public IEnumerable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId)
         {
             if (!_matches.Any(x => x.MatchID == matchId))
                 throw new Exception("No such match exists.");

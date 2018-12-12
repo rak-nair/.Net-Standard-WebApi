@@ -9,16 +9,16 @@ namespace AssignmentAPI.Services
 
         PlayerEntity GetPlayer(int playerId);
 
-        bool AddPlayer(PlayerEntity player);
+        PlayerEntity AddPlayer(PlayerEntity player);
 
         MatchEntity GetMatch(int matchId);
 
         IEnumerable<MatchEntity> GetAllMatches();
 
-        bool AddMatch(MatchEntity match);
+        MatchEntity AddMatch(MatchEntity match);
 
-        IEnumerable<MatchPlayerEntity> GetPlayersInMatch(int matchId);
+        IEnumerable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId);
 
-        bool AddPlayerToMatch(MatchPlayerEntity matchPlayer);
+        MatchPlayerEntity AddPlayerToMatch(MatchPlayerEntity matchPlayer);
     }
 }

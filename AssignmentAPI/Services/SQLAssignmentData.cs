@@ -1,52 +1,98 @@
-﻿using System;
+﻿using AssignmentAPI.Data;
+using AssignmentAPI.Data.Entities;
+using System;
+using System.Data.Entity;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using AssignmentAPI.Data.Entities;
 
 namespace AssignmentAPI.Services
 {
     public class SQLAssignmentData : IAssignmentData
     {
-        public bool AddMatch(MatchEntity match)
+        private AssignmentDbContext _context;
+
+        public SQLAssignmentData(AssignmentDbContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
-        public bool AddPlayer(PlayerEntity player)
+        public MatchEntity AddMatch(MatchEntity match)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _context.Matches.Add(match);
+                _context.SaveChanges();
+                return match;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        public bool AddPlayerToMatch(MatchPlayerEntity matchPlayer)
+        public PlayerEntity AddPlayer(PlayerEntity player)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _context.Players.Add(player);
+                _context.SaveChanges();
+                return player;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public MatchPlayerEntity AddPlayerToMatch(MatchPlayerEntity matchPlayer)
+        {
+            try
+            {
+                _context.Matches.Attach(matchPlayer.Match);
+                _context.Players.Attach(matchPlayer.Player);
+
+                _context.MatchPlayers.Add(matchPlayer);
+                _context.SaveChanges();
+                return matchPlayer;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
         }
 
         public IEnumerable<MatchEntity> GetAllMatches()
         {
             //https://stackoverflow.com/questions/38752848/paging-the-huge-data-that-is-returned-by-the-web-api
-            throw new NotImplementedException();
+
+            return _context.Matches.AsNoTracking().ToList();
         }
 
         public IEnumerable<PlayerEntity> GetAllPlayers()
         {
-            throw new NotImplementedException();
+            return _context.Players.AsNoTracking().ToList();
         }
 
         public MatchEntity GetMatch(int matchId)
         {
-            throw new NotImplementedException();
+            return _context.Matches.AsNoTracking().AsQueryable().Where(x => x.MatchID == matchId).FirstOrDefault();
         }
 
         public PlayerEntity GetPlayer(int playerId)
         {
-            throw new NotImplementedException();
+            return _context.Players.AsNoTracking().AsQueryable().Where(x => x.PlayerID == playerId).FirstOrDefault();
         }
 
-        public IEnumerable<MatchPlayerEntity> GetPlayersInMatch(int matchId)
+        public IEnumerable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId)
         {
-            throw new NotImplementedException();
-        }
+            //var players = _context.MatchPlayers.ToList();
+            //var foo = players.Where(x => x.Match.MatchID == matchId);
+            //return foo;
+            _context.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
+            var players = _context.MatchPlayers.AsNoTracking().Include(x => x.Match).Include(x => x.Player).AsQueryable().Where(x => x.Match.MatchID == matchId);
+            return players;
+        } 
     }
 }

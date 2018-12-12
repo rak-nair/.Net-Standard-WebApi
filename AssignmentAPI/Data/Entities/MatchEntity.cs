@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 
@@ -7,14 +8,11 @@ namespace AssignmentAPI.Data.Entities
 {
     public class MatchEntity
     {
-        public MatchEntity()
-        {
-            //Players = new List<PlayerEntity>();
-        }
-
+        [Key]
         public int MatchID { get; set; }
+        [Required]
         public DateTime MatchDateTime { get; set; }
+        [Required]
         public string MatchTitle { get; set; }
-        //public List<PlayerEntity> Players { get; set; }
     }
 }
