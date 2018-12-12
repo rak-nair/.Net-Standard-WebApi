@@ -85,13 +85,14 @@ namespace AssignmentAPI.Services
             return _context.Players.AsNoTracking().AsQueryable().Where(x => x.PlayerID == playerId).FirstOrDefault();
         }
 
+        //return IQueryable
         public IEnumerable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId)
         {
             //var players = _context.MatchPlayers.ToList();
             //var foo = players.Where(x => x.Match.MatchID == matchId);
             //return foo;
             _context.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
-            var players = _context.MatchPlayers.AsNoTracking().Include(x => x.Match).Include(x => x.Player).AsQueryable().Where(x => x.Match.MatchID == matchId);
+            var players = _context.MatchPlayers.AsNoTracking().Include(x => x.Match).Include(x => x.Player).Where(x => x.Match.MatchID == matchId);
             return players;
         } 
     }
