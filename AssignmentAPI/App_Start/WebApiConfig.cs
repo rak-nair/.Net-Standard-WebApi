@@ -22,12 +22,7 @@ namespace AssignmentAPI
                 routeTemplate: "api/players/{playerid}",
                 defaults: new { controller = "players", playerid = RouteParameter.Optional }
             );
-
-            //config.Routes.MapHttpRoute(
-            //    name: "PlayersInMatch",
-            //    routeTemplate: "api/matches/{matchid}/players/{matchPlayerid}",
-            //    defaults: new { controller = "matches", matchPlayerid = RouteParameter.Optional }
-            //);
+            
         }
     }
 }

@@ -2,15 +2,17 @@
 using AssignmentAPI.Data.Entities;
 using System;
 using System.Data.Entity;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace AssignmentAPI.Services
 {
+    //SQL Datastore.
     public class SQLAssignmentData : IAssignmentData
     {
         private AssignmentDbContext _context;
+
+        public ErrorResponses ErrorResposnses { get; set; }
 
         public SQLAssignmentData(AssignmentDbContext context)
         {
@@ -41,7 +43,6 @@ namespace AssignmentAPI.Services
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
@@ -50,6 +51,7 @@ namespace AssignmentAPI.Services
         {
             try
             {
+                //Attach since everything is retrieved AsNoTracking.
                 _context.Matches.Attach(matchPlayer.Match);
                 _context.Players.Attach(matchPlayer.Player);
 
@@ -66,29 +68,71 @@ namespace AssignmentAPI.Services
 
         public IQueryable<MatchEntity> GetAllMatches()
         {
-            //https://stackoverflow.com/questions/38752848/paging-the-huge-data-that-is-returned-by-the-web-api
-            return _context.Matches.AsNoTracking().AsQueryable().OrderBy(x=>x.MatchID);
+            try
+            {
+                //AsNoTracking is used to improve performance.
+                return _context.Matches.AsNoTracking().OrderBy(x => x.MatchID);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         public IQueryable<PlayerEntity> GetAllPlayers()
         {
-            return _context.Players.AsNoTracking().OrderBy(x=>x.PlayerID);
+            try
+            {
+                return _context.Players.AsNoTracking().OrderBy(x => x.PlayerID);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         public Task<MatchEntity> GetMatch(int matchId)
         {
-            return _context.Matches.AsNoTracking().FirstOrDefaultAsync(x => x.MatchID == matchId);
+            try
+            {
+                return _context.Matches.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.MatchID == matchId);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         public async Task<PlayerEntity> GetPlayer(int playerId)
         {
-            return await _context.Players.AsNoTracking().FirstOrDefaultAsync(x => x.PlayerID == playerId);
+            try
+            {
+                return await _context.Players.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.PlayerID == playerId);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         public IQueryable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId)
         {
-            return _context.MatchPlayers.AsNoTracking().Include(x => x.Match).Include(x => x.Player).Where(x => x.Match.MatchID == matchId);
+            try
+            {
+                if (!_context.Matches.Any(x => x.MatchID == matchId))
+                    throw new Exception(ErrorResposnses.NO_MATCH_EXISTS);
+
+                return _context.MatchPlayers.AsNoTracking()
+                    .Include(x => x.Match)
+                    .Include(x => x.Player)
+                    .Where(x => x.Match.MatchID == matchId);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
-        
     }
 }

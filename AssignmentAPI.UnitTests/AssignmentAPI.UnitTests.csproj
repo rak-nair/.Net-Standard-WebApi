@@ -59,9 +59,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TestMatchesController.cs" />
+    <Compile Include="ControllerTestSetUpBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestPlayersController.cs" />
+    <Compile Include="UnitTests\TestMatchesController.cs" />
+    <Compile Include="UnitTests\TestPlayersController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

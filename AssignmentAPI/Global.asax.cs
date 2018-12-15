@@ -3,8 +3,6 @@ using AssignmentAPI.Services;
 using SimpleInjector;
 using SimpleInjector.Integration.WebApi;
 using SimpleInjector.Lifestyles;
-using System.Configuration;
-using System.Data.Entity;
 using System.Web;
 using System.Web.Http;
 

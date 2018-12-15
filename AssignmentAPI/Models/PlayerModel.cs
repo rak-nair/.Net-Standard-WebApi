@@ -1,9 +1,9 @@
 ﻿using AssignmentAPI.Models.Attribute;
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace AssignmentAPI.Models
 {
+    //Input Model for Player
     public class PlayerModel
     {
         [Required]

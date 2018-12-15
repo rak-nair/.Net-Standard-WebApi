@@ -1,10 +1,11 @@
 ﻿using AssignmentAPI.Data.Entities;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace AssignmentAPI.Services
 {
+    //Base interface for all Data operations.
+    //IQueryable is used for better performance as compared to IEnumerable.
     public interface IAssignmentData
     {
         IQueryable<PlayerEntity> GetAllPlayers();
@@ -22,5 +23,7 @@ namespace AssignmentAPI.Services
         IQueryable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId);
 
         Task<MatchPlayerEntity> AddPlayerToMatch(MatchPlayerEntity matchPlayer);
+
+        ErrorResponses ErrorResposnses { get; set; }
     }
 }

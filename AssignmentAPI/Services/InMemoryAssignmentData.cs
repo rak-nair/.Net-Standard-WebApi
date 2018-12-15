@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace AssignmentAPI.Services
 {
+    //In Memory Datastore for tests.
     public class InMemoryAssignmentData : IAssignmentData
     {
         private IEnumerable<MatchEntity> _matches;
@@ -14,6 +15,7 @@ namespace AssignmentAPI.Services
 
         public MatchEntity SampleMatch { get; private set; }
         public PlayerEntity SamplePlayer { get; private set; }
+        public ErrorResponses ErrorResposnses { get; set; }
 
         public InMemoryAssignmentData()
         {
@@ -24,8 +26,18 @@ namespace AssignmentAPI.Services
 
             _players = new List<PlayerEntity> { player1, player2, player3, player4 };
 
-            MatchEntity match1 = new MatchEntity { MatchID = 1, MatchTitle = "FC Kron vs FC Wolfsburg", MatchDateTime = new DateTime(2018, 10, 15, 20, 00, 00) };
-            MatchEntity match2 = new MatchEntity { MatchID = 2, MatchTitle = "FC Barcelona vs FC Rela Madrid", MatchDateTime = new DateTime(2018, 10, 16, 20, 00, 00) };
+            MatchEntity match1 = new MatchEntity
+            {
+                MatchID = 1,
+                MatchTitle = "FC Kron vs FC Wolfsburg",
+                MatchDateTime = new DateTime(2018, 10, 15, 20, 00, 00)
+            };
+            MatchEntity match2 = new MatchEntity
+            {
+                MatchID = 2,
+                MatchTitle = "FC Barcelona vs FC Rela Madrid",
+                MatchDateTime = new DateTime(2018, 10, 16, 20, 00, 00)
+            };
 
             _matches = new List<MatchEntity> { match1, match2 };
 
@@ -64,7 +76,6 @@ namespace AssignmentAPI.Services
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
@@ -85,13 +96,12 @@ namespace AssignmentAPI.Services
 
         public IQueryable<MatchEntity> GetAllMatches()
         {
-            return _matches.AsQueryable().OrderBy(x=>x.MatchID);
+            return _matches.AsQueryable().OrderBy(x => x.MatchID);
         }
 
-        
         public IQueryable<PlayerEntity> GetAllPlayers()
         {
-            return _players.AsQueryable().OrderBy(x=>x.PlayerID);
+            return _players.AsQueryable().OrderBy(x => x.PlayerID);
         }
 
         public Task<MatchEntity> GetMatch(int matchId)
@@ -107,9 +117,8 @@ namespace AssignmentAPI.Services
         public IQueryable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId)
         {
             if (!_matches.Any(x => x.MatchID == matchId))
-                throw new Exception("No such match exists.");
+                throw new Exception(ErrorResposnses.NO_MATCH_EXISTS);
             return _matchPlayers.Where(x => x.Match.MatchID == matchId).AsQueryable();
         }
-    
     }
 }

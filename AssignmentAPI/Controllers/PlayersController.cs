@@ -19,11 +19,19 @@ namespace AssignmentAPI.Controllers
         {
             try
             {
-                var players = TheRepository.GetAllPlayers()
+                //It'll be prodent to set an upper limit for pageSize.
+                var players = TheRepository.GetAllPlayers();
+                var total = players.Count();
+                var pagedResults = TheRepository.GetAllPlayers()
                                     .Skip((page - 1) * pageSize)
                                     .Take(pageSize).ToList();
+                var paging = CreatePageLinks(Url, "Players", null, page, pageSize, total);
 
-                return Ok(players);
+                return Ok(new PagedPlayerViewModel
+                {
+                    Players = pagedResults,
+                    Pages = paging
+                });
             }
             catch (Exception ex)
             {
@@ -43,7 +51,7 @@ namespace AssignmentAPI.Controllers
 
                 if (player == null)
                 {
-                    return BadRequest("No such player exists");
+                    return BadRequest(TheErrorResponses.NO_PLAYER_EXISTS);
                 }
                 else
                 {
@@ -52,7 +60,7 @@ namespace AssignmentAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"No data - {ex.Message}");
+                return BadRequest(ex.Message);
             }
 
         }
@@ -65,11 +73,6 @@ namespace AssignmentAPI.Controllers
                 try
                 {
                     var playerEntity = TheModelFactory.Parse(player);
-                    if (TheRepository.GetAllPlayers().Any(x => x.Name == playerEntity.Name && x.YearOfBirth == playerEntity.YearOfBirth))
-                    {
-                        return BadRequest("Player already exists");
-                    }
-
                     playerEntity = await TheRepository.AddPlayer(playerEntity);
 
                     return CreatedAtRoute("Players", new { playerid = playerEntity.PlayerID }, playerEntity);
@@ -77,7 +80,7 @@ namespace AssignmentAPI.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return BadRequest($"Failed to add a new player - {ex.Message}");
+                    return BadRequest(ex.Message);
                 }
             }
             return BadRequest(ModelState);

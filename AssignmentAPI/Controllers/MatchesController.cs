@@ -19,15 +19,17 @@ namespace AssignmentAPI.Controllers
         {
             try
             {
-                var total = TheRepository.GetAllMatches().Count();
-                var matches = TheRepository.GetAllMatches()
+                //It'll be prudent to set an upper limit for pageSize.
+                var matches = TheRepository.GetAllMatches();
+                var total = matches.Count();
+                var pagedResults = matches
                                     .Skip((page - 1) * pageSize)
                                     .Take(pageSize).ToList();
                 var paging = CreatePageLinks(Url, "Matches", null, page, pageSize, total);
 
                 return Ok(new PagedMatchViewModel
                 {
-                    Matches = matches,
+                    Matches = pagedResults,
                     Pages = paging
                 });
             }
@@ -47,7 +49,7 @@ namespace AssignmentAPI.Controllers
                 var match = await TheRepository.GetMatch(matchid);
 
                 if (match == null)
-                    return BadRequest("No such match exists");
+                    return BadRequest(TheErrorResponses.NO_MATCH_EXISTS);
                 else
                     return Ok(match);
             }
@@ -55,7 +57,6 @@ namespace AssignmentAPI.Controllers
             {
                 return BadRequest($"No data - {ex.Message}");
             }
-
         }
 
         [HttpPost]
@@ -66,19 +67,13 @@ namespace AssignmentAPI.Controllers
                 try
                 {
                     var matchEntity = TheModelFactory.Parse(match);
-                    if (TheRepository.GetAllMatches().Any
-                        (x => x.MatchDateTime == matchEntity.MatchDateTime && x.MatchTitle == matchEntity.MatchTitle))
-                    {
-                        return BadRequest("Match already exists");
-                    }
-
                     matchEntity = await TheRepository.AddMatchAsync(matchEntity);
 
                     return CreatedAtRoute("Matches", new { matchid = matchEntity.MatchID }, matchEntity);
                 }
                 catch (Exception ex)
                 {
-                    return BadRequest($"Failed to add a new match - {ex.Message}");
+                    return BadRequest(ex.Message);
                 }
             }
             else
@@ -87,17 +82,28 @@ namespace AssignmentAPI.Controllers
 
         [HttpGet]
         [Route("api/matches/{matchid}/players")]
-        public IHttpActionResult GetPlayersInMatch(int matchid)
+        public IHttpActionResult GetPlayersInMatch(int matchid, int page = 1, int pageSize = 50)
         {
             try
             {
-                var playersInMatch = TheModelFactory.Create(TheRepository.GetMatchPlayersInMatch(matchid));
+                //It'll be prudent to set an upper limit for pageSize.
+                var playersInMatchEntities = TheRepository.GetMatchPlayersInMatch(matchid);
+                var playersInMatch = TheModelFactory.Create(playersInMatchEntities);
+                var total = playersInMatch.Count();
+                var pagedResults = playersInMatch
+                                    .Skip((page - 1) * pageSize)
+                                    .Take(pageSize).ToList();
+                var paging = CreatePageLinks(Url, "PlayersInMatch", null, page, pageSize, total);
 
-                return Ok(playersInMatch.ToList());
+                return Ok(new PagedMatchPlayerViewModel
+                {
+                    MatchPlayers = pagedResults,
+                    Pages = paging
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest($"No data - {ex.Message}");
+                return BadRequest(ex.Message);
             }
         }
 
@@ -117,7 +123,7 @@ namespace AssignmentAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"Failed to add player - {ex.Message}");
+                return BadRequest(ex.Message);
             }
         }
     }

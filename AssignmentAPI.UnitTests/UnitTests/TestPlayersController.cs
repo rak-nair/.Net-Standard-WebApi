@@ -3,27 +3,25 @@ using AssignmentAPI.Data.Entities;
 using AssignmentAPI.Models;
 using AssignmentAPI.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
 using System.Web.Http.Results;
 
 namespace AssignmentAPI.UnitTests
 {
     [TestClass]
-    public class TestPlayersController
+    public class TestPlayersController : ControllerTestSetUpBase
     {
         [TestMethod]
         public void GetAllPlayers_ShouldReturnAllPlayers()
         {
             var sut = new PlayersController(new InMemoryAssignmentData());
+            sut = SetUpDummyPaging(sut, "Players") as PlayersController;
 
-            var result = sut.GetAllPlayers() as OkNegotiatedContentResult<List<PlayerEntity>>;
+            var result = sut.GetAllPlayers() as OkNegotiatedContentResult<PagedPlayerViewModel>;
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(4, result.Content.Count());
+            Assert.AreEqual(4, result.Content.Players.Count());
         }
 
         [TestMethod]
@@ -45,6 +43,7 @@ namespace AssignmentAPI.UnitTests
             var result = await sut.GetPlayer(99);
 
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
+            Assert.AreEqual(((BadRequestErrorMessageResult)result).Message, new ErrorResponses().NO_PLAYER_EXISTS);
         }
 
         [TestMethod]
@@ -64,8 +63,7 @@ namespace AssignmentAPI.UnitTests
         {
             var sut = new PlayersController(new InMemoryAssignmentData());
             PlayerModel demoPlayer = ReturnInvalidDemoPlayer();
-            sut.Request = new HttpRequestMessage();
-            sut.Request.Properties["MS_HttpConfiguration"] = new HttpConfiguration();
+            sut = SetUpDummyHttpConfiguration(sut) as PlayersController;
 
             sut.Validate(demoPlayer);
 
@@ -76,7 +74,10 @@ namespace AssignmentAPI.UnitTests
         [TestMethod]
         public async Task AddPlayer_Duplicate_BadRequest()
         {
-            var data = new InMemoryAssignmentData();
+            var data = new InMemoryAssignmentData()
+            {
+                ErrorResposnses = new ErrorResponses()
+            };
             var sut = new PlayersController(data);
             var demoMatch = new PlayerModel
             {
@@ -87,6 +88,7 @@ namespace AssignmentAPI.UnitTests
             var result = await sut.AddPlayer(demoMatch);
 
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
+            Assert.AreEqual(((BadRequestErrorMessageResult)result).Message, new ErrorResponses().DUPLICATE_PLAYER);
         }
 
         PlayerModel ReturnValidDemoPlayer()

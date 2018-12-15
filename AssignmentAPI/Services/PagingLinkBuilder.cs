@@ -3,6 +3,7 @@ using System.Web.Http.Routing;
 
 namespace AssignmentAPI.Services
 {
+    //Class for building Paging Links for the GET operations.
     public class PagingLinkBuilder
     {
         public Uri FirstPage { get; private set; }

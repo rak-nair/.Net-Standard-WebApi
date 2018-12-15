@@ -120,9 +120,12 @@
     <Compile Include="Models\MatchModel.cs" />
     <Compile Include="Models\MatchPlayerModel.cs" />
     <Compile Include="Models\ModelFactory.cs" />
+    <Compile Include="Models\PagedMatchPlayerViewModel.cs" />
     <Compile Include="Models\PagedMatchViewModel.cs" />
+    <Compile Include="Models\PagedPlayerViewModel.cs" />
     <Compile Include="Models\PlayerModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\ErrorResponses.cs" />
     <Compile Include="Services\IAssignmentData.cs" />
     <Compile Include="Services\InMemoryAssignmentData.cs" />
     <Compile Include="Services\PagingLinkBuilder.cs" />

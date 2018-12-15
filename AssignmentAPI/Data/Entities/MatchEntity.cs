@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Web;
 
 namespace AssignmentAPI.Data.Entities
 {
+    //Entity for Matches
     public class MatchEntity
     {
         [Key]
