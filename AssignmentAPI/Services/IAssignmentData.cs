@@ -1,24 +1,26 @@
 ﻿using AssignmentAPI.Data.Entities;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace AssignmentAPI.Services
 {
     public interface IAssignmentData
     {
-        IEnumerable<PlayerEntity> GetAllPlayers();
+        IQueryable<PlayerEntity> GetAllPlayers();
 
-        PlayerEntity GetPlayer(int playerId);
+        Task<PlayerEntity> GetPlayer(int playerId);
 
-        PlayerEntity AddPlayer(PlayerEntity player);
+        Task<PlayerEntity> AddPlayer(PlayerEntity player);
 
-        MatchEntity GetMatch(int matchId);
+        IQueryable<MatchEntity> GetAllMatches();
 
-        IEnumerable<MatchEntity> GetAllMatches();
+        Task<MatchEntity> GetMatch(int matchId);
 
-        MatchEntity AddMatch(MatchEntity match);
+        Task<MatchEntity> AddMatchAsync(MatchEntity match);
 
-        IEnumerable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId);
+        IQueryable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId);
 
-        MatchPlayerEntity AddPlayerToMatch(MatchPlayerEntity matchPlayer);
+        Task<MatchPlayerEntity> AddPlayerToMatch(MatchPlayerEntity matchPlayer);
     }
 }

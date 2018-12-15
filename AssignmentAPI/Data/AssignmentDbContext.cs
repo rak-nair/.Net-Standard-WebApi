@@ -17,9 +17,9 @@ namespace AssignmentAPI.Data
 
         public DbSet<MatchPlayerEntity> MatchPlayers { get; set; }
 
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
-        {
-            Database.Log = (x) => Debug.Write(x);
-        }
+        //protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        //{
+        //    Database.Log = (x) => Debug.Write(x);
+        //}
     }
 }

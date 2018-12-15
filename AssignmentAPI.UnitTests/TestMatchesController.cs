@@ -3,10 +3,15 @@ using AssignmentAPI.Data.Entities;
 using AssignmentAPI.Models;
 using AssignmentAPI.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Controllers;
+using System.Web.Http.Hosting;
 using System.Web.Http.Results;
+using System.Web.Http.Routing;
 
 namespace AssignmentAPI.UnitTests
 {
@@ -17,20 +22,35 @@ namespace AssignmentAPI.UnitTests
         public void GetAllMatches_ShouldReturnAllMatches()
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
+           
+            var config = new HttpConfiguration();
+            var request = new HttpRequestMessage(HttpMethod.Post, "http://eye4talent.com/api/");
+            var route = config.Routes.MapHttpRoute("Matches", "api/{controller}/{id}");
+            var routeData = new HttpRouteData(route, new HttpRouteValueDictionary
+            {
+                {"id", Guid.Empty},
+                {"controller", "organization"}
+            });
+            sut.ControllerContext = new HttpControllerContext(config, routeData, request);
+            UrlHelper urlHelper = new UrlHelper(request);
+            sut.Request = request;
+            sut.Request.Properties[HttpPropertyKeys.HttpConfigurationKey] = config;
+            sut.Request.Properties[HttpPropertyKeys.HttpRouteDataKey] = routeData;
+            sut.Url = new UrlHelper(request);
 
             var result = sut.GetAllMatches()
-                as OkNegotiatedContentResult<IEnumerable<MatchEntity>>;
+                as OkNegotiatedContentResult<PagedMatchViewModel>;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(2, ((List<MatchEntity>)result.Content).Count);
+            Assert.IsNotNull(result.Content);
+            Assert.AreEqual(2, result.Content.Matches.Count);
         }
 
         [TestMethod]
-        public void GetMatch_ValidID_Success()
+        public async Task GetMatch_ValidID_Success()
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
 
-            var result = sut.GetMatch(1)
+            var result = await sut.GetMatch(1)
                 as OkNegotiatedContentResult<MatchEntity>;
 
             Assert.IsNotNull(result);
@@ -38,22 +58,22 @@ namespace AssignmentAPI.UnitTests
         }
 
         [TestMethod]
-        public void GetMatch_InvalidID_BadRequest()
+        public async Task GetMatch_InvalidID_BadRequest()
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
 
-            var result = sut.GetMatch(99);
+            var result = await sut.GetMatch(99);
 
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
         }
 
         [TestMethod]
-        public void AddMatch_ValidData_Success()
+        public async Task AddMatch_ValidData_Success()
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
             MatchModel demoMatch = ReturnValidDemoMatch();
 
-            var result = sut.AddMatch(demoMatch)
+            var result = await sut.AddMatch(demoMatch)
                 as CreatedAtRouteNegotiatedContentResult<MatchEntity>;
 
             Assert.IsNotNull(result);
@@ -75,7 +95,7 @@ namespace AssignmentAPI.UnitTests
         }
 
         [TestMethod]
-        public void AddMatch_Duplicate_BadRequest()
+        public async Task AddMatch_Duplicate_BadRequest()
         {
             var data = new InMemoryAssignmentData();
             var sut = new MatchesController(data);
@@ -85,7 +105,7 @@ namespace AssignmentAPI.UnitTests
                 MatchTitle = data.SampleMatch.MatchTitle
             };
 
-            var result = sut.AddMatch(demoMatch);
+            var result = await sut.AddMatch(demoMatch);
 
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
         }
@@ -95,11 +115,11 @@ namespace AssignmentAPI.UnitTests
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
 
-            var result = sut.GetPlayersInMatch(1) as OkNegotiatedContentResult<IEnumerable<MatchPlayerModel>>;
+            var result = sut.GetPlayersInMatch(1) as OkNegotiatedContentResult<List<MatchPlayerModel>>;
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(2, ((List<MatchPlayerModel>)result.Content).Count);
-            Assert.AreEqual(1, ((List<MatchPlayerModel>)result.Content)[0].Player.PlayerID);
+            Assert.AreEqual(2, result.Content.Count);
+            Assert.AreEqual(1, result.Content[0].Player.PlayerID);
         }
 
         [TestMethod]
@@ -113,11 +133,11 @@ namespace AssignmentAPI.UnitTests
         }
 
         [TestMethod]
-        public void AddPlayerToMatch_ValidData_Success()
+        public async Task AddPlayerToMatch_ValidData_Success()
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
 
-            var result = sut.AddPlayerToMatch(1, 3) as CreatedAtRouteNegotiatedContentResult<MatchPlayerEntity>;
+            var result = await sut.AddPlayerToMatch(1, 3) as CreatedAtRouteNegotiatedContentResult<MatchPlayerEntity>;
 
             Assert.IsNotNull(result);
             Assert.AreEqual(1, result.RouteValues["matchid"]);
@@ -127,31 +147,31 @@ namespace AssignmentAPI.UnitTests
         }
 
         [TestMethod]
-        public void AddPlayerToMatch_InvalidData_PlayerID_BadRequest()
+        public async Task AddPlayerToMatch_InvalidData_PlayerID_BadRequest()
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
 
-            var result = sut.AddPlayerToMatch(1, 9);
+            var result = await sut.AddPlayerToMatch(1, 9);
 
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
         }
 
         [TestMethod]
-        public void AddPlayerToMatch_InvalidData_MatchID_BadRequest()
+        public async Task AddPlayerToMatch_InvalidData_MatchID_BadRequest()
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
 
-            var result = sut.AddPlayerToMatch(9, 9);
+            var result = await sut.AddPlayerToMatch(9, 9);
 
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
         }
 
         [TestMethod]
-        public void AddPlayerToMatch_Duplicate_BadRequest()
+        public async Task AddPlayerToMatch_Duplicate_BadRequest()
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
 
-            var result = sut.AddPlayerToMatch(1, 1);
+            var result = await sut.AddPlayerToMatch(1, 1);
 
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
         }

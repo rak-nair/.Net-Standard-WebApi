@@ -2,6 +2,7 @@
 using AssignmentAPI.Services;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace AssignmentAPI.Controllers
@@ -14,11 +15,15 @@ namespace AssignmentAPI.Controllers
         }
 
         [HttpGet]
-        public IHttpActionResult GetAllPlayers()
+        public IHttpActionResult GetAllPlayers(int page = 1, int pageSize = 50)
         {
             try
             {
-                return Ok(TheRepository.GetAllPlayers());
+                var players = TheRepository.GetAllPlayers()
+                                    .Skip((page - 1) * pageSize)
+                                    .Take(pageSize).ToList();
+
+                return Ok(players);
             }
             catch (Exception ex)
             {
@@ -30,11 +35,11 @@ namespace AssignmentAPI.Controllers
         }
 
         [HttpGet]
-        public IHttpActionResult GetPlayer(int playerid)
+        public async Task<IHttpActionResult> GetPlayer(int playerid)
         {
             try
             {
-                var player = TheRepository.GetPlayer(playerid);
+                var player = await TheRepository.GetPlayer(playerid);
 
                 if (player == null)
                 {
@@ -53,7 +58,7 @@ namespace AssignmentAPI.Controllers
         }
 
         [HttpPost]
-        public IHttpActionResult AddPlayer([FromBody]PlayerModel player)
+        public async Task<IHttpActionResult> AddPlayer([FromBody]PlayerModel player)
         {
             if (ModelState.IsValid)
             {
@@ -65,7 +70,7 @@ namespace AssignmentAPI.Controllers
                         return BadRequest("Player already exists");
                     }
 
-                    playerEntity = TheRepository.AddPlayer(playerEntity);
+                    playerEntity = await TheRepository.AddPlayer(playerEntity);
 
                     return CreatedAtRoute("Players", new { playerid = playerEntity.PlayerID }, playerEntity);
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AssignmentAPI.Services
 {
@@ -39,13 +40,13 @@ namespace AssignmentAPI.Services
             SampleMatch = match1;
         }
 
-        public MatchEntity AddMatch(MatchEntity match)
+        public async Task<MatchEntity> AddMatchAsync(MatchEntity match)
         {
             try
             {
                 match.MatchID = _matches.Max(x => x.MatchID) + 1;
                 _matches = _matches.Concat(new[] { match });
-                return match;
+                return await Task.FromResult(match);
             }
             catch (Exception)
             {
@@ -53,13 +54,13 @@ namespace AssignmentAPI.Services
             }
         }
 
-        public PlayerEntity AddPlayer(PlayerEntity player)
+        public async Task<PlayerEntity> AddPlayer(PlayerEntity player)
         {
             try
             {
                 player.PlayerID = _players.Max(x => x.PlayerID) + 1;
                 _players = _players.Concat(new[] { player });
-                return player;
+                return await Task.FromResult(player);
             }
             catch (Exception)
             {
@@ -68,13 +69,13 @@ namespace AssignmentAPI.Services
             }
         }
 
-        public MatchPlayerEntity AddPlayerToMatch(MatchPlayerEntity matchPlayer)
+        public async Task<MatchPlayerEntity> AddPlayerToMatch(MatchPlayerEntity matchPlayer)
         {
             try
             {
                 matchPlayer.MatchPlayerID = _matchPlayers.Max(x => x.MatchPlayerID) + 1;
                 _matchPlayers = _matchPlayers.Concat(new[] { matchPlayer });
-                return matchPlayer;
+                return await Task.FromResult(matchPlayer);
             }
             catch (Exception)
             {
@@ -82,31 +83,33 @@ namespace AssignmentAPI.Services
             }
         }
 
-        public IEnumerable<MatchEntity> GetAllMatches()
+        public IQueryable<MatchEntity> GetAllMatches()
         {
-            return _matches.ToList();
+            return _matches.AsQueryable().OrderBy(x=>x.MatchID);
         }
 
-        public IEnumerable<PlayerEntity> GetAllPlayers()
+        
+        public IQueryable<PlayerEntity> GetAllPlayers()
         {
-            return _players.ToList();
+            return _players.AsQueryable().OrderBy(x=>x.PlayerID);
         }
 
-        public MatchEntity GetMatch(int matchId)
+        public Task<MatchEntity> GetMatch(int matchId)
         {
-            return _matches.Where(x => x.MatchID == matchId).FirstOrDefault();
+            return Task.FromResult(_matches.Where(x => x.MatchID == matchId).FirstOrDefault());
         }
 
-        public PlayerEntity GetPlayer(int playerId)
+        public Task<PlayerEntity> GetPlayer(int playerId)
         {
-            return _players.Where(x => x.PlayerID == playerId).FirstOrDefault();
+            return Task.FromResult(_players.Where(x => x.PlayerID == playerId).FirstOrDefault());
         }
 
-        public IEnumerable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId)
+        public IQueryable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId)
         {
             if (!_matches.Any(x => x.MatchID == matchId))
                 throw new Exception("No such match exists.");
-            return _matchPlayers.Where(x => x.Match.MatchID == matchId);
+            return _matchPlayers.Where(x => x.Match.MatchID == matchId).AsQueryable();
         }
+    
     }
 }

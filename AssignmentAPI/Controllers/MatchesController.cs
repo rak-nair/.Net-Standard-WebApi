@@ -2,6 +2,7 @@
 using AssignmentAPI.Services;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace AssignmentAPI.Controllers
@@ -14,11 +15,21 @@ namespace AssignmentAPI.Controllers
         }
 
         [HttpGet]
-        public IHttpActionResult GetAllMatches()
+        public IHttpActionResult GetAllMatches(int page = 1, int pageSize = 50)
         {
             try
             {
-                return Ok(TheRepository.GetAllMatches());
+                var total = TheRepository.GetAllMatches().Count();
+                var matches = TheRepository.GetAllMatches()
+                                    .Skip((page - 1) * pageSize)
+                                    .Take(pageSize).ToList();
+                var paging = CreatePageLinks(Url, "Matches", null, page, pageSize, total);
+
+                return Ok(new PagedMatchViewModel
+                {
+                    Matches = matches,
+                    Pages = paging
+                });
             }
             catch (Exception ex)
             {
@@ -29,11 +40,11 @@ namespace AssignmentAPI.Controllers
         }
 
         [HttpGet]
-        public IHttpActionResult GetMatch(int matchid)
+        public async Task<IHttpActionResult> GetMatch(int matchid)
         {
             try
             {
-                var match = TheRepository.GetMatch(matchid);
+                var match = await TheRepository.GetMatch(matchid);
 
                 if (match == null)
                     return BadRequest("No such match exists");
@@ -48,7 +59,7 @@ namespace AssignmentAPI.Controllers
         }
 
         [HttpPost]
-        public IHttpActionResult AddMatch([FromBody] MatchModel match)
+        public async Task<IHttpActionResult> AddMatch([FromBody] MatchModel match)
         {
             if (ModelState.IsValid)
             {
@@ -61,7 +72,7 @@ namespace AssignmentAPI.Controllers
                         return BadRequest("Match already exists");
                     }
 
-                    matchEntity = TheRepository.AddMatch(matchEntity);
+                    matchEntity = await TheRepository.AddMatchAsync(matchEntity);
 
                     return CreatedAtRoute("Matches", new { matchid = matchEntity.MatchID }, matchEntity);
                 }
@@ -82,7 +93,7 @@ namespace AssignmentAPI.Controllers
             {
                 var playersInMatch = TheModelFactory.Create(TheRepository.GetMatchPlayersInMatch(matchid));
 
-                return Ok(playersInMatch);
+                return Ok(playersInMatch.ToList());
             }
             catch (Exception ex)
             {
@@ -92,12 +103,12 @@ namespace AssignmentAPI.Controllers
 
         [HttpPost]
         [Route("api/matches/{matchid}/players/{matchPlayerid?}", Name = "PlayersInMatch")]
-        public IHttpActionResult AddPlayerToMatch(int matchId, [FromBody] int playerID)
+        public async Task<IHttpActionResult> AddPlayerToMatch(int matchId, [FromBody] int playerID)
         {
             try
             {
-                var playerInMatch = TheModelFactory.Parse(matchId, playerID);
-                playerInMatch = TheRepository.AddPlayerToMatch(playerInMatch);
+                var playerInMatch = await TheModelFactory.Parse(matchId, playerID);
+                playerInMatch = await TheRepository.AddPlayerToMatch(playerInMatch);
 
                 return CreatedAtRoute("PlayersInMatch",
                     new { matchid = matchId, matchPlayerid = playerInMatch.MatchPlayerID },

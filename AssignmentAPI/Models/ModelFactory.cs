@@ -3,6 +3,7 @@ using AssignmentAPI.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AssignmentAPI.Models
 {
@@ -24,15 +25,15 @@ namespace AssignmentAPI.Models
             return new MatchEntity { MatchDateTime = DateTime.Parse(matchModel.MatchDateTime), MatchTitle = matchModel.MatchTitle };
         }
 
-        public MatchPlayerEntity Parse(int matchId, int playerID)
+        public async Task<MatchPlayerEntity> Parse(int matchId, int playerID)
         {
             try
             {
-                var match = _data.GetMatch(matchId);
+                var match = await _data.GetMatch(matchId);
                 if (match == null)
                     throw new Exception("No such match exists.");
 
-                var player = _data.GetPlayer(playerID);
+                var player =  await _data.GetPlayer(playerID);
                 if (player == null)
                     throw new Exception("No such player exists");
 
@@ -51,9 +52,9 @@ namespace AssignmentAPI.Models
             }
         }
 
-        public IEnumerable<MatchPlayerModel> Create(IEnumerable<MatchPlayerEntity> matchPlayer)
+        public IQueryable<MatchPlayerModel> Create(IQueryable<MatchPlayerEntity> matchPlayer)
         {
-            return matchPlayer.Select(x => new MatchPlayerModel { MatchPlayerID = x.MatchPlayerID, Player = x.Player }).ToList();
+            return matchPlayer.Select(x => new MatchPlayerModel { MatchPlayerID = x.MatchPlayerID, Player = x.Player });
         }
     }
 }

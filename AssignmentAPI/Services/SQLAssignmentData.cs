@@ -4,6 +4,7 @@ using System;
 using System.Data.Entity;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AssignmentAPI.Services
 {
@@ -16,12 +17,12 @@ namespace AssignmentAPI.Services
             _context = context;
         }
 
-        public MatchEntity AddMatch(MatchEntity match)
+        public async Task<MatchEntity> AddMatchAsync(MatchEntity match)
         {
             try
             {
                 _context.Matches.Add(match);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return match;
             }
             catch (Exception)
@@ -30,12 +31,12 @@ namespace AssignmentAPI.Services
             }
         }
 
-        public PlayerEntity AddPlayer(PlayerEntity player)
+        public async Task<PlayerEntity> AddPlayer(PlayerEntity player)
         {
             try
             {
                 _context.Players.Add(player);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return player;
             }
             catch (Exception)
@@ -45,7 +46,7 @@ namespace AssignmentAPI.Services
             }
         }
 
-        public MatchPlayerEntity AddPlayerToMatch(MatchPlayerEntity matchPlayer)
+        public async Task<MatchPlayerEntity> AddPlayerToMatch(MatchPlayerEntity matchPlayer)
         {
             try
             {
@@ -53,7 +54,7 @@ namespace AssignmentAPI.Services
                 _context.Players.Attach(matchPlayer.Player);
 
                 _context.MatchPlayers.Add(matchPlayer);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return matchPlayer;
             }
             catch (Exception)
@@ -63,37 +64,31 @@ namespace AssignmentAPI.Services
 
         }
 
-        public IEnumerable<MatchEntity> GetAllMatches()
+        public IQueryable<MatchEntity> GetAllMatches()
         {
             //https://stackoverflow.com/questions/38752848/paging-the-huge-data-that-is-returned-by-the-web-api
-
-            return _context.Matches.AsNoTracking().ToList();
+            return _context.Matches.AsNoTracking().AsQueryable().OrderBy(x=>x.MatchID);
         }
 
-        public IEnumerable<PlayerEntity> GetAllPlayers()
+        public IQueryable<PlayerEntity> GetAllPlayers()
         {
-            return _context.Players.AsNoTracking().ToList();
+            return _context.Players.AsNoTracking().OrderBy(x=>x.PlayerID);
         }
 
-        public MatchEntity GetMatch(int matchId)
+        public Task<MatchEntity> GetMatch(int matchId)
         {
-            return _context.Matches.AsNoTracking().AsQueryable().Where(x => x.MatchID == matchId).FirstOrDefault();
+            return _context.Matches.AsNoTracking().FirstOrDefaultAsync(x => x.MatchID == matchId);
         }
 
-        public PlayerEntity GetPlayer(int playerId)
+        public async Task<PlayerEntity> GetPlayer(int playerId)
         {
-            return _context.Players.AsNoTracking().AsQueryable().Where(x => x.PlayerID == playerId).FirstOrDefault();
+            return await _context.Players.AsNoTracking().FirstOrDefaultAsync(x => x.PlayerID == playerId);
         }
 
-        //return IQueryable
-        public IEnumerable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId)
+        public IQueryable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId)
         {
-            //var players = _context.MatchPlayers.ToList();
-            //var foo = players.Where(x => x.Match.MatchID == matchId);
-            //return foo;
-            _context.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
-            var players = _context.MatchPlayers.AsNoTracking().Include(x => x.Match).Include(x => x.Player).Where(x => x.Match.MatchID == matchId);
-            return players;
-        } 
+            return _context.MatchPlayers.AsNoTracking().Include(x => x.Match).Include(x => x.Player).Where(x => x.Match.MatchID == matchId);
+        }
+        
     }
 }

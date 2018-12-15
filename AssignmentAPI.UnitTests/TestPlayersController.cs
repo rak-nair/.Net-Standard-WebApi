@@ -4,7 +4,9 @@ using AssignmentAPI.Models;
 using AssignmentAPI.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Results;
 
@@ -18,40 +20,40 @@ namespace AssignmentAPI.UnitTests
         {
             var sut = new PlayersController(new InMemoryAssignmentData());
 
-            var result = sut.GetAllPlayers() as OkNegotiatedContentResult<IEnumerable<PlayerEntity>>;
+            var result = sut.GetAllPlayers() as OkNegotiatedContentResult<List<PlayerEntity>>;
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(4, ((List<PlayerEntity>)result.Content).Count);
+            Assert.AreEqual(4, result.Content.Count());
         }
 
         [TestMethod]
-        public void GetPlayer_ValidID_Success()
+        public async Task GetPlayer_ValidID_Success()
         {
             var sut = new PlayersController(new InMemoryAssignmentData());
 
-            var result = sut.GetPlayer(1) as OkNegotiatedContentResult<PlayerEntity>;
+            var result = await sut.GetPlayer(1) as OkNegotiatedContentResult<PlayerEntity>;
 
             Assert.IsNotNull(result);
             Assert.AreEqual(1, result.Content.PlayerID);
         }
 
         [TestMethod]
-        public void GetPlayer_InvalidID_BadRequest()
+        public async Task GetPlayer_InvalidID_BadRequest()
         {
             var sut = new PlayersController(new InMemoryAssignmentData());
 
-            var result = sut.GetPlayer(99);
+            var result = await sut.GetPlayer(99);
 
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
         }
 
         [TestMethod]
-        public void AddPlayer_ValidData_Success()
+        public async Task AddPlayer_ValidData_Success()
         {
             var sut = new PlayersController(new InMemoryAssignmentData());
             PlayerModel demoPlayer = ReturnValidDemoPlayer();
 
-            var result = sut.AddPlayer(demoPlayer) as CreatedAtRouteNegotiatedContentResult<PlayerEntity>;
+            var result = await sut.AddPlayer(demoPlayer) as CreatedAtRouteNegotiatedContentResult<PlayerEntity>;
 
             Assert.IsNotNull(result);
             Assert.AreEqual(5, result.RouteValues["playerid"]);
@@ -72,7 +74,7 @@ namespace AssignmentAPI.UnitTests
         }
 
         [TestMethod]
-        public void AddPlayer_Duplicate_BadRequest()
+        public async Task AddPlayer_Duplicate_BadRequest()
         {
             var data = new InMemoryAssignmentData();
             var sut = new PlayersController(data);
@@ -82,7 +84,7 @@ namespace AssignmentAPI.UnitTests
                 YearOfBirth = data.SamplePlayer.YearOfBirth
             };
 
-            var result = sut.AddPlayer(demoMatch);
+            var result = await sut.AddPlayer(demoMatch);
 
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
         }
