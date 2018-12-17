@@ -6,11 +6,14 @@ namespace AssignmentAPI.Services
     //Class for building Paging Links for the GET operations.
     public class PagingLinkBuilder
     {
+        #region Properties
         public Uri FirstPage { get; private set; }
         public Uri LastPage { get; private set; }
         public Uri NextPage { get; private set; }
         public Uri PreviousPage { get; private set; }
+        #endregion
 
+        #region Constructor
         public PagingLinkBuilder(UrlHelper urlHelper, string routeName, object routeValues, int pageNo, int pageSize, long totalRecordCount)
         {
             // Determine total number of pages
@@ -51,5 +54,6 @@ namespace AssignmentAPI.Services
                     }));
             }
         }
+        #endregion
     }
 }

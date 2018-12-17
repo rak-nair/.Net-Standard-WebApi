@@ -1,7 +1,6 @@
 ﻿using AssignmentAPI.Models;
 using AssignmentAPI.Services;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -14,22 +13,19 @@ namespace AssignmentAPI.Controllers
 
         }
 
+        #region GetMethods
         [HttpGet]
-        public IHttpActionResult GetAllMatches(int page = 1, int pageSize = 50)
+        public async Task<IHttpActionResult> GetAllMatches(int page = 1, int pageSize = 50)
         {
             try
             {
-                //It'll be prudent to set an upper limit for pageSize.
-                var matches = TheRepository.GetAllMatches();
-                var total = matches.Count();
-                var pagedResults = matches
-                                    .Skip((page - 1) * pageSize)
-                                    .Take(pageSize).ToList();
-                var paging = CreatePageLinks(Url, "Matches", null, page, pageSize, total);
+                //It'll be prodent to set an upper limit for pageSize.
+                var pagedResults = await TheRepository.GetAllMatches(page, pageSize);
+                var paging = CreatePageLinks(Url, "Matches", null, page, pageSize, pagedResults.TotalRows);
 
                 return Ok(new PagedMatchViewModel
                 {
-                    Matches = pagedResults,
+                    Matches = pagedResults.Matches,
                     Pages = paging
                 });
             }
@@ -59,41 +55,20 @@ namespace AssignmentAPI.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IHttpActionResult> AddMatch([FromBody] MatchModel match)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var matchEntity = TheModelFactory.Parse(match);
-                    matchEntity = await TheRepository.AddMatchAsync(matchEntity);
-
-                    return CreatedAtRoute("Matches", new { matchid = matchEntity.MatchID }, matchEntity);
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest(ex.Message);
-                }
-            }
-            else
-                return BadRequest(ModelState);
-        }
-
         [HttpGet]
         [Route("api/matches/{matchid}/players")]
-        public IHttpActionResult GetPlayersInMatch(int matchid, int page = 1, int pageSize = 50)
+        public async Task<IHttpActionResult> GetPlayersInMatch(int matchid, int page = 1, int pageSize = 50)
         {
             try
             {
+                if (!await TheRepository.DoesMatchExist(matchid))
+                {
+                    return BadRequest(TheErrorResponses.NO_MATCH_EXISTS);
+                }
                 //It'll be prudent to set an upper limit for pageSize.
-                var playersInMatchEntities = TheRepository.GetMatchPlayersInMatch(matchid);
-                var playersInMatch = TheModelFactory.Create(playersInMatchEntities);
-                var total = playersInMatch.Count();
-                var pagedResults = playersInMatch
-                                    .Skip((page - 1) * pageSize)
-                                    .Take(pageSize).ToList();
-                var paging = CreatePageLinks(Url, "PlayersInMatch", null, page, pageSize, total);
+                var resultEntities = await TheRepository.GetMatchPlayersInMatch(matchid, page, pageSize);
+                var pagedResults = TheModelFactory.Create(resultEntities.MatchPlayers);
+                var paging = CreatePageLinks(Url, "PlayersInMatch", null, page, pageSize, resultEntities.TotalRows);
 
                 return Ok(new PagedMatchPlayerViewModel
                 {
@@ -105,6 +80,29 @@ namespace AssignmentAPI.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+        #endregion
+
+        #region PostMethods
+        [HttpPost]
+        public async Task<IHttpActionResult> AddMatch([FromBody] MatchModel match)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var matchEntity = await TheModelFactory.Parse(match);
+                    matchEntity = await TheRepository.AddMatchAsync(matchEntity);
+
+                    return CreatedAtRoute("Matches", new { matchid = matchEntity.MatchID }, matchEntity);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.Message);
+                }
+            }
+            else
+                return BadRequest(ModelState);
         }
 
         [HttpPost]
@@ -126,5 +124,6 @@ namespace AssignmentAPI.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        #endregion
     }
 }

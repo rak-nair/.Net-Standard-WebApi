@@ -12,18 +12,33 @@ namespace AssignmentAPI.UnitTests
     [TestClass]
     public class TestPlayersController : ControllerTestSetUpBase
     {
+        #region GetAllPlayers
         [TestMethod]
-        public void GetAllPlayers_ShouldReturnAllPlayers()
+        public async Task GetAllPlayers_ShouldReturnAllPlayers()
         {
             var sut = new PlayersController(new InMemoryAssignmentData());
             sut = SetUpDummyPaging(sut, "Players") as PlayersController;
 
-            var result = sut.GetAllPlayers() as OkNegotiatedContentResult<PagedPlayerViewModel>;
+            var result = await sut.GetAllPlayers() as OkNegotiatedContentResult<PagedPlayerViewModel>;
 
             Assert.IsNotNull(result);
             Assert.AreEqual(4, result.Content.Players.Count());
         }
 
+        [TestMethod]
+        public async Task GetAllPlayers_Paged_ShouldReturnAllPlayersByPageSize()
+        {
+            var sut = new PlayersController(new InMemoryAssignmentData());
+            sut = SetUpDummyPaging(sut, "Players") as PlayersController;
+
+            var result = await sut.GetAllPlayers(1,1) as OkNegotiatedContentResult<PagedPlayerViewModel>;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Content.Players.Count());
+        }
+        #endregion
+
+        #region GetPlayer
         [TestMethod]
         public async Task GetPlayer_ValidID_Success()
         {
@@ -45,7 +60,9 @@ namespace AssignmentAPI.UnitTests
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
             Assert.AreEqual(((BadRequestErrorMessageResult)result).Message, new ErrorResponses().NO_PLAYER_EXISTS);
         }
+        #endregion
 
+        #region AddPlayer
         [TestMethod]
         public async Task AddPlayer_ValidData_Success()
         {
@@ -74,10 +91,7 @@ namespace AssignmentAPI.UnitTests
         [TestMethod]
         public async Task AddPlayer_Duplicate_BadRequest()
         {
-            var data = new InMemoryAssignmentData()
-            {
-                ErrorResposnses = new ErrorResponses()
-            };
+            var data = new InMemoryAssignmentData();
             var sut = new PlayersController(data);
             var demoMatch = new PlayerModel
             {
@@ -90,7 +104,9 @@ namespace AssignmentAPI.UnitTests
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
             Assert.AreEqual(((BadRequestErrorMessageResult)result).Message, new ErrorResponses().DUPLICATE_PLAYER);
         }
+        #endregion
 
+        #region DummyPlayers
         PlayerModel ReturnValidDemoPlayer()
         {
             return new PlayerModel
@@ -104,5 +120,6 @@ namespace AssignmentAPI.UnitTests
         {
             return new PlayerModel();
         }
+        #endregion
     }
 }

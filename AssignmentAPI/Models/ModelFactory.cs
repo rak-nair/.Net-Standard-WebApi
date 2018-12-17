@@ -1,6 +1,7 @@
 ﻿using AssignmentAPI.Data.Entities;
 using AssignmentAPI.Services;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,23 +11,28 @@ namespace AssignmentAPI.Models
     //Parse methods convert from Model to Entity and Create methods go the other way.
     public class ModelFactory
     {
+        #region Private_Variables
         private IAssignmentData _data;
         private ErrorResponses _responses;
+        #endregion
 
+        #region Constructor
         public ModelFactory(IAssignmentData data, ErrorResponses responses)
         {
             _data = data;
             _responses = responses;
         }
-        public PlayerEntity Parse(PlayerModel playerModel)
+        #endregion
+
+        #region Parse - Get Entity From Model
+        public async Task<PlayerEntity> Parse(PlayerModel playerModel)
         {
             var playerEntity = new PlayerEntity
             {
                 Name = playerModel.Name,
                 YearOfBirth = playerModel.YearOfBirth
             };
-            if (_data.GetAllPlayers().Any(x => x.Name == playerEntity.Name
-                                            && x.YearOfBirth == playerEntity.YearOfBirth))
+            if (await _data.DoesPlayerExist(playerEntity.Name, playerEntity.YearOfBirth))
             {
                 throw new Exception(_responses.DUPLICATE_PLAYER);
             }
@@ -34,7 +40,7 @@ namespace AssignmentAPI.Models
             return playerEntity;
         }
 
-        public MatchEntity Parse(MatchModel matchModel)
+        public async Task<MatchEntity> Parse(MatchModel matchModel)
         {
             var matchEntity = new MatchEntity
             {
@@ -42,9 +48,7 @@ namespace AssignmentAPI.Models
                 MatchTitle = matchModel.MatchTitle
             };
 
-            if (_data.GetAllMatches().Any
-                        (x => x.MatchDateTime == matchEntity.MatchDateTime
-                            && x.MatchTitle == matchEntity.MatchTitle))
+            if (await _data.DoesMatchExist(matchEntity.MatchTitle, matchEntity.MatchDateTime))
             {
                 throw new Exception(_responses.DUPLICATE_MATCH);
             }
@@ -56,30 +60,30 @@ namespace AssignmentAPI.Models
         {
             try
             {
-                var match = await _data.GetMatch(matchId);
-                if (match == null)
+                var matchEntity = await _data.GetMatch(matchId);
+                if (! await _data.DoesMatchExist(matchId))
                     throw new Exception(_responses.NO_MATCH_EXISTS);
 
-                var player = await _data.GetPlayer(playerID);
-                if (player == null)
+                var playerEntity = await _data.GetPlayer(playerID);
+                if (playerEntity == null)
                     throw new Exception(_responses.NO_PLAYER_EXISTS);
 
-                var matchPlayers = _data.GetMatchPlayersInMatch(matchId);
-
-                if (matchPlayers.Any(x => x.Player.PlayerID == playerID))
+                if (await _data.DoesMatchPlayerExist(matchId, playerID))
                 {
                     throw new Exception(_responses.DUPLICATE_PLAYER_IN_MATCH);
                 }
 
-                return new MatchPlayerEntity { Match = match, Player = player };
+                return new MatchPlayerEntity { Match = matchEntity, Player = playerEntity };
             }
             catch (Exception)
             {
                 throw;
             }
         }
+        #endregion
 
-        public IQueryable<MatchPlayerModel> Create(IQueryable<MatchPlayerEntity> matchPlayer)
+        #region Create - Get Model from Entity
+        public List<MatchPlayerModel> Create(List<MatchPlayerEntity> matchPlayer)
         {
             return matchPlayer
                 .Select(x =>
@@ -87,8 +91,8 @@ namespace AssignmentAPI.Models
                     {
                         MatchPlayerID = x.MatchPlayerID,
                         Player = x.Player
-                    })
-                    .OrderBy(x => x.MatchPlayerID);
+                    }).ToList();
         }
+        #endregion
     }
 }

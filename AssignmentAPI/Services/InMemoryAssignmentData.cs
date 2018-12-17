@@ -9,14 +9,19 @@ namespace AssignmentAPI.Services
     //In Memory Datastore for tests.
     public class InMemoryAssignmentData : IAssignmentData
     {
+        #region Private_Variables
         private IEnumerable<MatchEntity> _matches;
         private IEnumerable<PlayerEntity> _players;
         private IEnumerable<MatchPlayerEntity> _matchPlayers;
+        #endregion
 
+        #region Properties
+        //The Samples are used in the Unit Test.
         public MatchEntity SampleMatch { get; private set; }
         public PlayerEntity SamplePlayer { get; private set; }
-        public ErrorResponses ErrorResposnses { get; set; }
+        #endregion
 
+        #region Constructor
         public InMemoryAssignmentData()
         {
             PlayerEntity player1 = new PlayerEntity { PlayerID = 1, Name = "Lionel Messi", YearOfBirth = 1980 };
@@ -51,19 +56,30 @@ namespace AssignmentAPI.Services
             SamplePlayer = player1;
             SampleMatch = match1;
         }
+        #endregion
 
-        public async Task<MatchEntity> AddMatchAsync(MatchEntity match)
+        #region Players
+        public async Task<(List<PlayerEntity> Players, int TotalRows)> GetAllPlayers(int page, int pageSize)
         {
-            try
-            {
-                match.MatchID = _matches.Max(x => x.MatchID) + 1;
-                _matches = _matches.Concat(new[] { match });
-                return await Task.FromResult(match);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            var totalPlayers = _players.Count();
+            var players = ReturnPagedData(_players.OrderBy(x => x.PlayerID), page, pageSize);
+            var result = (players, totalPlayers);
+
+            return await Task.FromResult(result);
+        }
+
+        public async Task<PlayerEntity> GetPlayer(int playerId)
+        {
+            return await Task.FromResult(_players
+                                    .Where(x => x.PlayerID == playerId)
+                                    .FirstOrDefault());
+        }
+
+        public Task<bool> DoesPlayerExist(string name, int yearOfBirth)
+        {
+            return Task.FromResult(_players
+                                    .Any(x => x.Name == name
+                                        && x.YearOfBirth == yearOfBirth));
         }
 
         public async Task<PlayerEntity> AddPlayer(PlayerEntity player)
@@ -79,6 +95,72 @@ namespace AssignmentAPI.Services
                 throw;
             }
         }
+        #endregion
+
+        #region Matches
+        public async Task<(List<MatchEntity> Matches, int TotalRows)> GetAllMatches(int page, int pageSize)
+        {
+            var totalMatches = _matches.Count();
+            var matches = ReturnPagedData(_matches.OrderBy(x => x.MatchID), page, pageSize);
+
+            var result = (matches, totalMatches);
+
+            return await Task.FromResult(result);
+        }
+
+        public async Task<MatchEntity> GetMatch(int matchId)
+        {
+            return await Task.FromResult(_matches.Where(x => x.MatchID == matchId).FirstOrDefault());
+        }
+
+        public async Task<bool> DoesMatchExist(string matchTitle, DateTime matchDateTime)
+        {
+            return await Task.FromResult(_matches
+                                    .Any(x => x.MatchTitle == matchTitle
+                                        && x.MatchDateTime == matchDateTime));
+        }
+
+        public async Task<bool> DoesMatchExist(int matchID)
+        {
+            return await Task.FromResult(_matches
+                                    .Any(x => x.MatchID == matchID));
+        }
+
+        public async Task<MatchEntity> AddMatchAsync(MatchEntity match)
+        {
+            try
+            {
+                match.MatchID = _matches.Max(x => x.MatchID) + 1;
+                _matches = _matches.Concat(new[] { match });
+                return await Task.FromResult(match);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        #endregion
+
+        #region MatchPlayers
+        public async Task<(List<MatchPlayerEntity> MatchPlayers, int TotalRows)> GetMatchPlayersInMatch
+                (int matchId, int page, int pageSize)
+        {
+            var matchPlayers = ReturnPagedData(_matchPlayers
+                                .Where(x => x.Match.MatchID == matchId)
+                                .OrderBy(x => x.MatchPlayerID), page, pageSize);
+
+            var totalMatchPlayers = matchPlayers.Count();
+            var result = (matchPlayers, totalMatchPlayers);
+
+            return await Task.FromResult(result);
+        }
+
+        public async Task<bool> DoesMatchPlayerExist(int matchID, int playerID)
+        {
+            return await Task.FromResult(_matchPlayers
+                                    .Any(x => x.Match.MatchID == matchID
+                                        && x.Player.PlayerID == playerID));
+        }
 
         public async Task<MatchPlayerEntity> AddPlayerToMatch(MatchPlayerEntity matchPlayer)
         {
@@ -93,32 +175,16 @@ namespace AssignmentAPI.Services
                 throw;
             }
         }
+        #endregion
 
-        public IQueryable<MatchEntity> GetAllMatches()
+        #region Helper Methods
+        List<T> ReturnPagedData<T>(IOrderedEnumerable<T> input, int page, int pageSize)
         {
-            return _matches.AsQueryable().OrderBy(x => x.MatchID);
+            return input
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
         }
-
-        public IQueryable<PlayerEntity> GetAllPlayers()
-        {
-            return _players.AsQueryable().OrderBy(x => x.PlayerID);
-        }
-
-        public Task<MatchEntity> GetMatch(int matchId)
-        {
-            return Task.FromResult(_matches.Where(x => x.MatchID == matchId).FirstOrDefault());
-        }
-
-        public Task<PlayerEntity> GetPlayer(int playerId)
-        {
-            return Task.FromResult(_players.Where(x => x.PlayerID == playerId).FirstOrDefault());
-        }
-
-        public IQueryable<MatchPlayerEntity> GetMatchPlayersInMatch(int matchId)
-        {
-            if (!_matches.Any(x => x.MatchID == matchId))
-                throw new Exception(ErrorResposnses.NO_MATCH_EXISTS);
-            return _matchPlayers.Where(x => x.Match.MatchID == matchId).AsQueryable();
-        }
+        #endregion
     }
 }

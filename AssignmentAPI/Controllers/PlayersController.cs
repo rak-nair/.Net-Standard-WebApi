@@ -1,7 +1,6 @@
 ﻿using AssignmentAPI.Models;
 using AssignmentAPI.Services;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -14,22 +13,19 @@ namespace AssignmentAPI.Controllers
 
         }
 
+        #region GetMethods
         [HttpGet]
-        public IHttpActionResult GetAllPlayers(int page = 1, int pageSize = 50)
+        public async Task<IHttpActionResult> GetAllPlayers(int page = 1, int pageSize = 50)
         {
             try
             {
                 //It'll be prodent to set an upper limit for pageSize.
-                var players = TheRepository.GetAllPlayers();
-                var total = players.Count();
-                var pagedResults = TheRepository.GetAllPlayers()
-                                    .Skip((page - 1) * pageSize)
-                                    .Take(pageSize).ToList();
-                var paging = CreatePageLinks(Url, "Players", null, page, pageSize, total);
+                var pagedResults = await TheRepository.GetAllPlayers(page,pageSize);
+                var paging = CreatePageLinks(Url, "Players", null, page, pageSize,pagedResults.TotalRows);
 
                 return Ok(new PagedPlayerViewModel
                 {
-                    Players = pagedResults,
+                    Players = pagedResults.Players,
                     Pages = paging
                 });
             }
@@ -64,7 +60,9 @@ namespace AssignmentAPI.Controllers
             }
 
         }
+        #endregion
 
+        #region PostMethods
         [HttpPost]
         public async Task<IHttpActionResult> AddPlayer([FromBody]PlayerModel player)
         {
@@ -72,7 +70,7 @@ namespace AssignmentAPI.Controllers
             {
                 try
                 {
-                    var playerEntity = TheModelFactory.Parse(player);
+                    var playerEntity = await TheModelFactory.Parse(player);
                     playerEntity = await TheRepository.AddPlayer(playerEntity);
 
                     return CreatedAtRoute("Players", new { playerid = playerEntity.PlayerID }, playerEntity);
@@ -85,5 +83,6 @@ namespace AssignmentAPI.Controllers
             }
             return BadRequest(ModelState);
         }
+        #endregion
     }
 }

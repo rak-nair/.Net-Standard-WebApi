@@ -9,21 +9,37 @@ using System.Web.Http.Results;
 namespace AssignmentAPI.UnitTests
 {
     [TestClass]
-    public class TestMatchesController:ControllerTestSetUpBase
+    public class TestMatchesController : ControllerTestSetUpBase
     {
+        #region GetAllMatches
         [TestMethod]
-        public void GetAllMatches_ShouldReturnAllMatches()
+        public async Task GetAllMatches_ShouldReturnAllMatches()
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
             sut = SetUpDummyPaging(sut, "Matches") as MatchesController;
 
-            var result = sut.GetAllMatches()
+            var result = await sut.GetAllMatches()
                 as OkNegotiatedContentResult<PagedMatchViewModel>;
 
             Assert.IsNotNull(result.Content);
             Assert.AreEqual(2, result.Content.Matches.Count);
         }
 
+        [TestMethod]
+        public async Task GetAllMatches_Paged_ShouldReturnAllMatchesByPageSize()
+        {
+            var sut = new MatchesController(new InMemoryAssignmentData());
+            sut = SetUpDummyPaging(sut, "Matches") as MatchesController;
+
+            var result = await sut.GetAllMatches(1, 1)
+                as OkNegotiatedContentResult<PagedMatchViewModel>;
+
+            Assert.IsNotNull(result.Content);
+            Assert.AreEqual(1, result.Content.Matches.Count);
+        }
+        #endregion
+
+        #region GetMatch
         [TestMethod]
         public async Task GetMatch_ValidID_Success()
         {
@@ -46,7 +62,9 @@ namespace AssignmentAPI.UnitTests
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
             Assert.AreEqual(((BadRequestErrorMessageResult)result).Message, new ErrorResponses().NO_MATCH_EXISTS);
         }
+        #endregion
 
+        #region AddMatch
         [TestMethod]
         public async Task AddMatch_ValidData_Success()
         {
@@ -66,7 +84,7 @@ namespace AssignmentAPI.UnitTests
             var sut = new MatchesController(new InMemoryAssignmentData());
             var demoMatch = ReturnInvalidDemoMatch();
             sut = SetUpDummyHttpConfiguration(sut) as MatchesController;
-            
+
             sut.Validate(demoMatch);
 
             Assert.IsFalse(sut.ModelState.IsValid);
@@ -89,14 +107,17 @@ namespace AssignmentAPI.UnitTests
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
             Assert.AreEqual(((BadRequestErrorMessageResult)result).Message, new ErrorResponses().DUPLICATE_MATCH);
         }
+        #endregion
 
+        #region GetPlayersInMatch
         [TestMethod]
-        public void GetPlayersInMatch_ValidID_ShouldReturnAllPlayers()
+        public async Task GetPlayersInMatch_ValidID_ShouldReturnAllPlayers()
         {
             var sut = new MatchesController(new InMemoryAssignmentData());
             sut = SetUpDummyPaging(sut, "PlayersInMatch") as MatchesController;
 
-            var result = sut.GetPlayersInMatch(1) as OkNegotiatedContentResult<PagedMatchPlayerViewModel>;
+            var result = await sut.GetPlayersInMatch(1)
+                as OkNegotiatedContentResult<PagedMatchPlayerViewModel>;
 
             Assert.IsNotNull(result.Content);
             Assert.AreEqual(2, result.Content.MatchPlayers.Count);
@@ -104,16 +125,32 @@ namespace AssignmentAPI.UnitTests
         }
 
         [TestMethod]
-        public void GetPlayersInMatch_InvalidID_BadRequest()
+        public async Task GetPlayersInMatch_Paged_ValidID_ShouldReturnAllPlayersByPageSize()
         {
-            var sut = new MatchesController(new InMemoryAssignmentData() { ErrorResposnses = new ErrorResponses() });
-            
-            var result = sut.GetPlayersInMatch(99);
+            var sut = new MatchesController(new InMemoryAssignmentData());
+            sut = SetUpDummyPaging(sut, "PlayersInMatch") as MatchesController;
+
+            var result = await sut.GetPlayersInMatch(1,1,1)
+                as OkNegotiatedContentResult<PagedMatchPlayerViewModel>;
+
+            Assert.IsNotNull(result.Content);
+            Assert.AreEqual(1, result.Content.MatchPlayers.Count);
+            Assert.AreEqual(1, result.Content.MatchPlayers[0].Player.PlayerID);
+        }
+
+        [TestMethod]
+        public async Task GetPlayersInMatch_InvalidID_BadRequest()
+        {
+            var sut = new MatchesController(new InMemoryAssignmentData());
+
+            var result = await sut.GetPlayersInMatch(99);
 
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
             Assert.AreEqual(((BadRequestErrorMessageResult)result).Message, new ErrorResponses().NO_MATCH_EXISTS);
         }
+        #endregion
 
+        #region AddPlayerToMatch
         [TestMethod]
         public async Task AddPlayerToMatch_ValidData_Success()
         {
@@ -160,7 +197,9 @@ namespace AssignmentAPI.UnitTests
             Assert.IsInstanceOfType(result, typeof(BadRequestErrorMessageResult));
             Assert.AreEqual(((BadRequestErrorMessageResult)result).Message, new ErrorResponses().DUPLICATE_PLAYER_IN_MATCH);
         }
+        #endregion
 
+        #region DummyDemoMatches
         MatchModel ReturnValidDemoMatch()
         {
             return new MatchModel
@@ -174,5 +213,6 @@ namespace AssignmentAPI.UnitTests
         {
             return new MatchModel();
         }
+        #endregion
     }
 }
