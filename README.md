@@ -43,12 +43,19 @@ SimpleInjector.Integration.WebAPI).
 
 Endpoints Implemented – 
 •	Add player - ... api/players POST
+
 •	Get players - ... api/players?page=x&pageSize=y GET***
+
 •	Get player - ... api/players/playerid GET
+
 •	Add match - ... api/matches POST  
+
 •	Get matches - ... api/matches?page=x&pageSize=y GET***
+
 •	Get match -  ... api/matches/matchid GET
+
 •	Add player to match - ... api/matches/matchid/players POST
+
 •	Get players in a match - ... api/matches/matchid/players?page=x&pageSize=y GET***
 
 ***Note: page and pageSize parameters are optional, the defaults are 1 and 50 respectively.
