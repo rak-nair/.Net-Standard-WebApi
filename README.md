@@ -42,6 +42,7 @@ SimpleInjector.Integration.WebAPI).
 #Solution
 
 Endpoints Implemented – 
+
 •	Add player - ... api/players POST
 
 •	Get players - ... api/players?page=x&pageSize=y GET***
@@ -61,9 +62,15 @@ Endpoints Implemented –
 ***Note: page and pageSize parameters are optional, the defaults are 1 and 50 respectively.
 
 Comments
+
 •	All API methods return Task<IHttpActionResult> and the content format is left up to content-negotiation.
+  
 •	All API methods return Tasks in the hopes of better performance, but the best way to check would be by running diagnostics on the server.
+
 •	InitialCreate in the Migrations folder can be used to create the SQLDB using the “Update-Database” command in the PackageManagerConsole.
+
 •	The Connection string used, goes by the name “DefaultConnection” in the web.config.
+
 •	For all EF queries AsNoTracking() is used to improve performance.
+
 •	Adding the Paging option in all the GETs may have added an extra degree of complexity, but it helps with performance when dealing with large datasets. I also recommend setting an upper limit for PageSize.
