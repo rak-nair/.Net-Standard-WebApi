@@ -39,7 +39,7 @@ Evaluation
 Hints and links - For DI you can use SimpleInjector found in NuGet (along with
 SimpleInjector.Integration.WebAPI).
 
-#Solution
+**Solution
 
 Endpoints Implemented – 
 
@@ -59,7 +59,7 @@ Endpoints Implemented –
 
 •	Get players in a match - ... api/matches/matchid/players?page=x&pageSize=y GET***
 
-***Note: page and pageSize parameters are optional, the defaults are 1 and 50 respectively.
+**Note: page and pageSize parameters are optional, the defaults are 1 and 50 respectively.
 
 
 **Comments
