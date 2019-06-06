@@ -39,7 +39,7 @@ Evaluation
 Hints and links - For DI you can use SimpleInjector found in NuGet (along with
 SimpleInjector.Integration.WebAPI).
 
-**Solution
+**Solution**
 
 Endpoints Implemented – 
 
@@ -62,7 +62,7 @@ Endpoints Implemented –
 **Note: page and pageSize parameters are optional, the defaults are 1 and 50 respectively.
 
 
-**Comments
+**Comments**
 
 •	All API methods return Task<IHttpActionResult> and the content format is left up to content-negotiation.
   
