@@ -1,5 +1,4 @@
-# WebAPIAssignment
-
+# WebAPI Demo
 Task Create a full functioning backend capable of serving endpoints.
 
 Endpoints required:
